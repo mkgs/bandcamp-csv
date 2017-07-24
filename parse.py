@@ -16,6 +16,7 @@ default = lambda: Decimal('0')
 data = defaultdict(default)
 shipping = Decimal('0')
 paypal_fees = Decimal('0')
+net_amount = Decimal('0')
 pending_sales = False
 
 for row in reader:
@@ -53,8 +54,13 @@ for row in reader:
 
 for k in data:
     print("{}\n    ${}\n".format(k, data[k]))
+    net_amount += data[k]
+
+net_amount += shipping
+net_amount -= paypal_fees
 
 print("Shipping\n    ${}\n".format(shipping))
 print("Paypal Fees\n    ${}\n".format(paypal_fees))
+print("Net Amount\n    ${}\n".format(net_amount))
 print("Pending Sales!!!" if pending_sales else "")
 
