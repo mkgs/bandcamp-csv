@@ -14,6 +14,7 @@ reader = csv.reader(args.csv_file)
 header = True
 default = lambda: Decimal('0') 
 data = defaultdict(default)
+quantity = defaultdict(int)
 shipping = Decimal('0')
 paypal_fees = Decimal('0')
 transfer_amount = Decimal('0')
@@ -29,6 +30,8 @@ for row in reader:
             item_type_column = row.index('item type')
             fee_type_column = row.index('fee type')
             transaction_fee_column = row.index('transaction fee')
+            package_column = row.index('package')
+            quantity_column = row.index('quantity')
         except ValueError:
             print("Error finding correct data in .csv files")
             sys.exit()
@@ -39,12 +42,16 @@ for row in reader:
         item_type = row[item_type_column]
         fee_type = row[fee_type_column]
         transaction_fee = row[transaction_fee_column]
+        package = row[package_column]
 
         if catalog_number:
             if item_type == 'pending sale':
                 pending_sales = True
             elif net_amount:
-                data[catalog_number] += Decimal(net_amount)
+                product_format = "vinyl" if "12''" in package else "digi"
+                product_key = f"{catalog_number} {product_format}"
+                data[product_key] += Decimal(net_amount)
+                quantity[product_key] += 1
                 if shipping_amount:
                     shipping += Decimal(shipping_amount)
 
@@ -52,8 +59,8 @@ for row in reader:
             if transaction_fee:
                 paypal_fees += Decimal(transaction_fee)
 
-for k in data:
-    print("{}\n    ${}\n".format(k, data[k]))
+for k in sorted(data.keys()):
+    print("{} x{}\n    ${}\n".format(k, quantity[k], data[k]))
     transfer_amount += data[k]
 
 transfer_amount += shipping
